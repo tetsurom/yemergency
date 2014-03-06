@@ -1,19 +1,3 @@
-yemergency
-==========
-
-Y-Emergency Map
-
-
-## Usage
-
-geolocation APIの都合上、webサーバを介さないと現在地情報を取ることができません。
-よって、以下のコマンドでサーバを立ち上げることを推奨します。
-
-```
-$ python -m SimpleHTTPServer
-```
-
-## API List
 
 ###震災時の避難場所
 * http://yokosuka-opendata.ubin.jp/dataset/2eb99d86-3352-4f3f-a6fc-39d3d20d08d0/resource/7ddac289-fcb1-4cbd-a14c-4b6759b89020/download/2010.4.geojson
