@@ -1,5 +1,6 @@
 ///<reference path="typings/jquery/jquery.d.ts" />
 ///<reference path="typings/googlemaps/google.maps.d.ts" />
+
 var YEmergency;
 (function (YEmergency) {
     function createMarker(map, latLang, text) {

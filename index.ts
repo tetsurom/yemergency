@@ -1,6 +1,17 @@
 ///<reference path="typings/jquery/jquery.d.ts" />
 ///<reference path="typings/googlemaps/google.maps.d.ts" />
 
+interface Geometry {
+    type: string;
+    coordinates: number[];
+}
+
+interface GeoJSON {
+    type: string;
+    property: any/*FIXME*/;
+    geometry: Geometry;
+}
+
 module YEmergency {
 
     export function createMarker(map, latLang, text) {
