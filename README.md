@@ -4,7 +4,19 @@ yemergency
 Y-Emergency Map
 
 
-## Usage
+## Usage for developer
+
+開発環境の準備
+
+```
+$ npm install
+```
+
+####jade, typescriptのコンパイル
+
+```
+$ gulp
+```
 
 geolocation APIの都合上、webサーバを介さないと現在地情報を取ることができません。
 よって、以下のコマンドでサーバを立ち上げることを推奨します。
