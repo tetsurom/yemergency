@@ -8,7 +8,7 @@ var YEmergency;
             this.db = {};
         }
         MarkerDB.prototype.insertMarker = function (key, marker) {
-            if (this.db[key]) {
+            if (!this.db[key]) {
                 this.db[key] = [];
             }
             this.db[key].push(marker);
@@ -35,11 +35,15 @@ var YEmergency;
     YEmergency.createMarker = createMarker;
 })(YEmergency || (YEmergency = {}));
 
+var Debug = {};
 $(function () {
     var markerDB = new YEmergency.MarkerDB();
+    Debug.markerDB = markerDB;
     var map;
 
     var showPosition = function (position) {
+        console.log(position.coords.latitude);
+        console.log(position.coords.longitude);
         var MyPosition = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
         var mapOptions = {
             center: MyPosition,
@@ -51,9 +55,11 @@ $(function () {
         markerDB.insertMarker("MyPosition", YEmergency.createMarker(map, MyPosition, "You are here"));
     };
 
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(showPosition);
-    } else {
-        document.getElementById("map_canvas").textContent = "Geolocation is not supported by this browser.";
-    }
+    showPosition({ coords: { latitude: 35.4739812, longitude: 139.5897151 } });
+    //FIXME Enable this finally
+    //if (navigator.geolocation) {
+    //    navigator.geolocation.getCurrentPosition(showPosition);
+    //} else{
+    //    document.getElementById("map_canvas").textContent = "Geolocation is not supported by this browser.";
+    //}
 });

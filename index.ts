@@ -22,7 +22,7 @@ module YEmergency {
         }
 
         insertMarker(key: string, marker: google.maps.Marker): void {
-            if(this.db[key]) {
+            if(!this.db[key]) {
                 this.db[key] = [];
             }
             this.db[key].push(marker);
@@ -46,11 +46,15 @@ module YEmergency {
     }
 }
 
+var Debug: any = {};
 $(()=>{
     var markerDB = new YEmergency.MarkerDB();
+    Debug.markerDB = markerDB;
     var map: google.maps.Map;
 
     var showPosition = (position) => {
+        console.log(position.coords.latitude);
+        console.log(position.coords.longitude);
         var MyPosition = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
         var mapOptions = {
             center: MyPosition,
@@ -62,9 +66,12 @@ $(()=>{
         markerDB.insertMarker("MyPosition", YEmergency.createMarker(map, MyPosition, "You are here"));
     };
 
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(showPosition);
-    } else{
-        document.getElementById("map_canvas").textContent = "Geolocation is not supported by this browser.";
-    }
+
+    showPosition({coords: {latitude: 35.4739812, longitude: 139.5897151}});
+    //FIXME Enable this finally
+    //if (navigator.geolocation) {
+    //    navigator.geolocation.getCurrentPosition(showPosition);
+    //} else{
+    //    document.getElementById("map_canvas").textContent = "Geolocation is not supported by this browser.";
+    //}
 });
