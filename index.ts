@@ -52,6 +52,47 @@ module YEmergency {
     }
 }
 
+class MenuItem {
+    private Checked: boolean;
+    private Title: string;
+    private IconElement: HTMLElement;
+    private MenuItemElement: HTMLElement;
+
+    constructor(Title: string, IsChecked: boolean, OnClick: (IsChecked: boolean)=>void){
+        this.Title = Title;
+        this.Checked = IsChecked;
+        this.Render();
+        this.MenuItemElement.addEventListener("click", ()=>{
+            this.SetIsChecked(!this.Checked);
+            OnClick(this.Checked);
+        });
+    }
+
+    private SetIsChecked(Flag: boolean){
+        this.Checked = Flag;
+        this.IconElement.className = "glyphicon glyphicon-" + (this.Checked ? "check" : "unchecked");
+    }
+
+    private Render(): void {
+        var spaceChar = "\u00a0";
+        var li = document.createElement("li");
+        var a = document.createElement("a");
+        var span = document.createElement("span");
+        var text = document.createTextNode(spaceChar + this.Title);
+        a.href = "#";
+        a.appendChild(span);
+        a.appendChild(text);
+        li.appendChild(a);
+        this.IconElement = span;
+        this.MenuItemElement = li;
+        this.SetIsChecked(this.Checked);
+    }
+
+    GetElement(){
+        return this.MenuItemElement;
+    }
+}
+
 var Debug: any = {};
 $(() => {
     var markerDB = new YEmergency.MarkerDB();
@@ -80,4 +121,30 @@ $(() => {
     //} else{
     //    document.getElementById("map_canvas").textContent = "Geolocation is not supported by this browser.";
     //}
+
+    // Generate menu.
+
+    var Layers = [
+        new MenuItem("避難場所", true, (IsChecked: boolean)=>{
+            console.log("避難場所" + " is clicked");
+        }),
+        new MenuItem("AED設置場所", false, (IsChecked: boolean)=>{
+            console.log("AED設置場所" + " is clicked");
+        }),
+        new MenuItem("ほげほげ", false, (IsChecked: boolean)=>{
+            console.log("ほげほげ" + " is clicked");
+        })
+    ];
+
+    var menu = $(".layer-list");
+
+    for(var i = 0; i < Layers.length; i++){
+        menu.append(Layers[i].GetElement());
+    }
+
+    $(".menu-about").on("click", ()=>{
+        (<any>$("#about-modal")).modal();
+    });
+
+    (<any>$(".dropdown-toggle")).dropdown();
 });
