@@ -9,5 +9,6 @@ html(lang='en')
     script(type="text/javascript", src="js/bootstrap.min.js")
     script(type="text/javascript", src="index.js")
     script(type="text/javascript", src="http://maps.googleapis.com/maps/api/js?key=AIzaSyCYKBJNDGQr1ooy9wxoOH6QO2jnO4DUvN4&sensor=true")
-  body(style="height: 640px;")
-    #map_canvas(style="width: 100%; height: 100%;")
+  body
+    div(style="width: 100%; height: 100%; position: fixed;")
+      #map_canvas(style="width: 100%; height: 100%;")
