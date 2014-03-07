@@ -181,12 +181,12 @@ $(() => {
         new MenuItem("震災時の避難場所", true, (IsChecked: boolean)=>{
             changeMarkers("evacuation_site", "00ff00", "避", "震災時の避難場所",IsChecked);
         }),
-        new MenuItem("AED設置場所", false, (IsChecked: boolean)=>{
-            changeMarkers("aed","FFCCAA", "A", "AED設置場所", IsChecked);
-        }),
         new MenuItem("風水害時の避難場所", false, (IsChecked: boolean)=>{
             changeMarkers("flood", "99FFFF", "避", "風水害時の避難場所", IsChecked);
         })
+        new MenuItem("AED設置場所", false, (IsChecked: boolean)=>{
+            changeMarkers("aed","FFCCAA", "A", "AED設置場所", IsChecked);
+        }),
     ];
 
     var menu = $(".layer-list");
