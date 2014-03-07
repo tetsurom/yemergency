@@ -3,6 +3,30 @@
 
 var YEmergency;
 (function (YEmergency) {
+    var PolygonDB = (function () {
+        function PolygonDB() {
+            this.db = {};
+        }
+        PolygonDB.prototype.insert = function (key, polygon) {
+            if (!this.db[key]) {
+                this.db[key] = [];
+            }
+            this.db[key].push(polygon);
+        };
+
+        PolygonDB.prototype.deletePolygons = function (key) {
+            var polygons = this.db[key];
+            if (polygons) {
+                for (var i = 0; i < polygons.length; i++) {
+                    polygons[i].setMap(null);
+                }
+            }
+            this.db[key] = [];
+        };
+        return PolygonDB;
+    })();
+    YEmergency.PolygonDB = PolygonDB;
+
     var MarkerDB = (function () {
         function MarkerDB() {
             this.db = {};
@@ -12,10 +36,6 @@ var YEmergency;
                 this.db[key] = [];
             }
             this.db[key].push(marker);
-        };
-
-        MarkerDB.prototype.getMarkers = function (key) {
-            return this.db[key];
         };
 
         MarkerDB.prototype.deleteMarkers = function (key) {
@@ -35,6 +55,29 @@ var YEmergency;
         return 'http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=' + typography + '|' + color + '|000000';
     }
     YEmergency.createIconURLFromChartAPI = createIconURLFromChartAPI;
+
+    function createPolygon(map, latLangs, strokeColor, fillColor) {
+        var polygon = new google.maps.Polygon({
+            paths: latLangs,
+            map: map,
+            strokeColor: strokeColor,
+            strokeOpacity: 0.8,
+            strokeWeight: 2,
+            fillColor: fillColor,
+            fillOpacity: 0.35
+        });
+        return polygon;
+    }
+    YEmergency.createPolygon = createPolygon;
+
+    function convertCoords2Path(coords) {
+        var lngs = [];
+        for (var i = 0; i < coords.length; i++) {
+            lngs.push(new google.maps.LatLng(coords[i][1], coords[i][0]));
+        }
+        return lngs;
+    }
+    YEmergency.convertCoords2Path = convertCoords2Path;
 
     function createMarker(map, latLang, text, url, type) {
         var marker = new google.maps.Marker({
@@ -81,6 +124,17 @@ var YEmergency;
                     var lat = new google.maps.LatLng(geojsons[i].geometry.coordinates[1], geojsons[i].geometry.coordinates[0]);
                     var marker = YEmergency.createMarker(map, lat, geojsons[i].properties.NAME, url, type);
                     markerDB.insertMarker(key, marker);
+                }
+            };
+        };
+
+        DataLoader.createPolygonsAjaxResponse = function (key, map, polygonDB) {
+            return function (res) {
+                var geojsons = res.features;
+                for (var i = 0; i < geojsons.length; i++) {
+                    var lats = YEmergency.convertCoords2Path(geojsons[i].geometry.coordinates[0]);
+                    var polygon = YEmergency.createPolygon(map, lats, "00ffff", "00ffff");
+                    polygonDB.insert(key, polygon);
                 }
             };
         };
@@ -134,8 +188,11 @@ var MenuItem = (function () {
 var Debug = {};
 $(function () {
     var markerDB = new YEmergency.MarkerDB();
-    Debug.markerDB = markerDB;
+    var polygonDB = new YEmergency.PolygonDB();
     var map;
+
+    Debug.markerDB = markerDB;
+    Debug.polygonDB = polygonDB;
 
     var showPosition = function (position) {
         var MyPosition = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
@@ -148,6 +205,11 @@ $(function () {
 
         var url = YEmergency.createIconURLFromChartAPI("FF99FF", "現");
         markerDB.insertMarker("MyPosition", YEmergency.createMarker(map, MyPosition, "You are here", url, "あなたの現在地"));
+
+        var tsunami = ["a1r3", "a2r2", "a3r2"];
+        for (var i = 0; i < tsunami.length; i++) {
+            YEmergency.DataLoader.load(tsunami[i], YEmergency.DataLoader.createPolygonsAjaxResponse(tsunami[i], map, polygonDB));
+        }
     };
 
     showPosition({ coords: { latitude: 35.4739812, longitude: 139.5897151 } });
@@ -173,7 +235,7 @@ $(function () {
             changeMarkers("evacuation_site", url, "震災時の避難場所", IsChecked);
         }),
         new MenuItem("AED設置場所", false, function (IsChecked) {
-            var url = YEmergency.createIconURLFromChartAPI("FFCCAA", "A");
+            var url = "image/AED.png";
             changeMarkers("aed", url, "AED設置場所", IsChecked);
         }),
         new MenuItem("風水害時の避難場所", false, function (IsChecked) {

@@ -3,7 +3,7 @@
 
 interface Geometry {
     type: string;
-    coordinates: number[];
+    coordinates: any[]/*FIXME*/;
 }
 
 interface GeoJSON {
@@ -13,6 +13,31 @@ interface GeoJSON {
 }
 
 module YEmergency {
+
+    export class PolygonDB {
+        db: {[index: string]: google.maps.Polygon[]};
+
+        constructor() {
+            this.db = {};
+        }
+
+        insert(key: string, polygon: google.maps.Polygon): void {
+            if(!this.db[key]) {
+                this.db[key] = [];
+            }
+            this.db[key].push(polygon);
+        }
+
+        deletePolygons(key: string): void {
+            var polygons = this.db[key];
+            if(polygons) {
+                for(var i = 0; i < polygons.length; i++) {
+                    polygons[i].setMap(null);
+                }
+            }
+            this.db[key] = [];
+        }
+    }
 
     export class MarkerDB {
         db: {[index: string]: google.maps.Marker[]};
@@ -28,10 +53,6 @@ module YEmergency {
             this.db[key].push(marker);
         }
 
-        getMarkers(key: string): google.maps.Marker[] {
-            return this.db[key];
-        }
-
         deleteMarkers(key: string): void {
             var markers = this.db[key];
             if(markers) {
@@ -45,6 +66,27 @@ module YEmergency {
 
     export function createIconURLFromChartAPI(color, typography): string {
         return 'http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld='+typography+'|'+color+'|000000';
+    }
+
+    export function createPolygon(map, latLangs, strokeColor, fillColor): google.maps.Polygon {
+        var polygon =  new google.maps.Polygon({
+            paths: latLangs,
+            map: map,
+            strokeColor: strokeColor,
+            strokeOpacity: 0.8,
+            strokeWeight: 2,
+            fillColor: fillColor,
+            fillOpacity: 0.35
+        });
+        return polygon;
+    }
+
+    export function convertCoords2Path(coords: number[][]): google.maps.LatLng[] {
+        var lngs = [];
+        for(var i = 0; i< coords.length; i++) {
+            lngs.push(new google.maps.LatLng(coords[i][1], coords[i][0]));
+        }
+        return lngs;
     }
 
     export function createMarker(map, latLang, text, url, type): google.maps.Marker {
@@ -92,6 +134,17 @@ module YEmergency {
                     var lat = new google.maps.LatLng(geojsons[i].geometry.coordinates[1], geojsons[i].geometry.coordinates[0]);
                     var marker = YEmergency.createMarker(map, lat, geojsons[i].properties.NAME/*FIXME*/, url, type);
                     markerDB.insertMarker(key, marker);
+                }
+            };
+        }
+
+        static createPolygonsAjaxResponse(key: string, map: google.maps.Map, polygonDB: YEmergency.PolygonDB): (res: any) => void {
+            return (res: any) => {
+                var geojsons: GeoJSON[] = res.features;
+                for(var i = 0; i < geojsons.length; i++) {
+                    var lats = YEmergency.convertCoords2Path(geojsons[i].geometry.coordinates[0]);
+                    var polygon = YEmergency.createPolygon(map, lats, "00ffff", "00ffff");
+                    polygonDB.insert(key, polygon);
                 }
             };
         }
@@ -147,8 +200,11 @@ class MenuItem {
 var Debug: any = {};
 $(() => {
     var markerDB = new YEmergency.MarkerDB();
-    Debug.markerDB = markerDB;
+    var polygonDB = new YEmergency.PolygonDB();
     var map: google.maps.Map;
+
+    Debug.markerDB = markerDB;
+    Debug.polygonDB = polygonDB;
 
     var showPosition = (position) => {
         var MyPosition = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
@@ -161,6 +217,11 @@ $(() => {
 
         var url = YEmergency.createIconURLFromChartAPI("FF99FF", "現");
         markerDB.insertMarker("MyPosition", YEmergency.createMarker(map, MyPosition, "You are here", url, "あなたの現在地"));
+
+        var tsunami = ["a1r3", "a2r2", "a3r2"];
+        for(var i = 0; i < tsunami.length; i++) {
+            YEmergency.DataLoader.load(tsunami[i], YEmergency.DataLoader.createPolygonsAjaxResponse(tsunami[i], map, polygonDB));
+        }
     };
 
 
@@ -188,7 +249,7 @@ $(() => {
             changeMarkers("evacuation_site",  url, "震災時の避難場所",IsChecked);
         }),
         new MenuItem("AED設置場所", false, (IsChecked: boolean)=>{
-            var url = YEmergency.createIconURLFromChartAPI("FFCCAA", "A");
+            var url = "image/AED.png";//YEmergency.createIconURLFromChartAPI("FFCCAA", "A");
             changeMarkers("aed", url, "AED設置場所", IsChecked);
         }),
         new MenuItem("風水害時の避難場所", false, (IsChecked: boolean)=>{
