@@ -43,12 +43,16 @@ module YEmergency {
         }
     }
 
-    export function createMarker(map, latLang, text, color, typography, type): google.maps.Marker {
+    export function createIconURLFromChartAPI(color, typography): string {
+        return 'http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld='+typography+'|'+color+'|000000';
+    }
+
+    export function createMarker(map, latLang, text, url, type): google.maps.Marker {
         var marker =  new google.maps.Marker({
             position: latLang,
             map: map,
             title: text,
-            icon: 'http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld='+typography+'|'+color+'|000000'
+            icon: url, 
         });
 
         google.maps.event.addListener( marker, 'click', function() {
@@ -81,12 +85,12 @@ module YEmergency {
             });
         }
 
-        static createMarkersAjaxResponse(key: string, map: google.maps.Map, markerDB: YEmergency.MarkerDB, color: string, typography: string, type: string): (res: any) => void {
+        static createMarkersAjaxResponse(key: string, map: google.maps.Map, markerDB: YEmergency.MarkerDB, url: string, type: string): (res: any) => void {
             return (res: any) => {
                 var geojsons: GeoJSON[] = res.features;
                 for(var i = 0; i < geojsons.length; i++) {
                     var lat = new google.maps.LatLng(geojsons[i].geometry.coordinates[1], geojsons[i].geometry.coordinates[0]);
-                    var marker = YEmergency.createMarker(map, lat, geojsons[i].properties.NAME/*FIXME*/, color, typography, type);
+                    var marker = YEmergency.createMarker(map, lat, geojsons[i].properties.NAME/*FIXME*/, url, type);
                     markerDB.insertMarker(key, marker);
                 }
             };
@@ -155,7 +159,8 @@ $(() => {
         };
         map = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);
 
-        markerDB.insertMarker("MyPosition", YEmergency.createMarker(map, MyPosition, "You are here", "FF99FF", "現", "あなたの現在地"));
+        var url = YEmergency.createIconURLFromChartAPI("FF99FF", "現");
+        markerDB.insertMarker("MyPosition", YEmergency.createMarker(map, MyPosition, "You are here", url, "あなたの現在地"));
     };
 
 
@@ -169,9 +174,9 @@ $(() => {
 
     // Generate menu.
 
-    var changeMarkers = (key: string, color: string, typography: string, type: string, IsChecked: boolean) => {
+    var changeMarkers = (key: string, url: string, type: string, IsChecked: boolean) => {
         if(IsChecked) {
-            YEmergency.DataLoader.load(key, YEmergency.DataLoader.createMarkersAjaxResponse(key, map, markerDB, color, typography, type));
+            YEmergency.DataLoader.load(key, YEmergency.DataLoader.createMarkersAjaxResponse(key, map, markerDB, url, type));
         } else {
             markerDB.deleteMarkers(key);
         }
@@ -179,13 +184,16 @@ $(() => {
 
     var Layers = [
         new MenuItem("震災時の避難場所", true, (IsChecked: boolean)=>{
-            changeMarkers("evacuation_site", "00ff00", "避", "震災時の避難場所",IsChecked);
+            var url = YEmergency.createIconURLFromChartAPI("00ff00", "避");
+            changeMarkers("evacuation_site",  url, "震災時の避難場所",IsChecked);
         }),
         new MenuItem("AED設置場所", false, (IsChecked: boolean)=>{
-            changeMarkers("aed","FFCCAA", "A", "AED設置場所", IsChecked);
+            var url = YEmergency.createIconURLFromChartAPI("FFCCAA", "A");
+            changeMarkers("aed", url, "AED設置場所", IsChecked);
         }),
         new MenuItem("風水害時の避難場所", false, (IsChecked: boolean)=>{
-            changeMarkers("flood", "99FFFF", "避", "風水害時の避難場所", IsChecked);
+            var url = YEmergency.createIconURLFromChartAPI("99FFFF", "避");
+            changeMarkers("flood",  url, "風水害時の避難場所", IsChecked);
         })
     ];
 
