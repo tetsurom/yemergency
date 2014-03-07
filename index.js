@@ -220,8 +220,9 @@ $(function () {
         markerDB.insertMarker("MyPosition", YEmergency.createMarker(map, MyPosition, "", url, "あなたの現在地"));
     };
 
-    showPosition({ coords: { latitude: 35.4739812, longitude: 139.5897151 } });
+    showPosition({ coords: { latitude: 35.2107028, longitude: 139.6853169 } });
 
+    //showPosition({coords: {latitude: 35.4739812, longitude: 139.5897151}});
     //FIXME Enable this finally
     //if (navigator.geolocation) {
     //    navigator.geolocation.getCurrentPosition(showPosition);
