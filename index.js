@@ -86,6 +86,11 @@ var MenuItem = (function () {
             _this.SetIsChecked(!_this.Checked);
             OnClick(_this.Checked);
         });
+
+        //For first time
+        if (this.Checked) {
+            OnClick(this.Checked);
+        }
     }
     MenuItem.prototype.SetIsChecked = function (Flag) {
         this.Checked = Flag;
@@ -129,10 +134,6 @@ $(function () {
         map = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);
 
         markerDB.insertMarker("MyPosition", YEmergency.createMarker(map, MyPosition, "You are here"));
-        var DBKey = "evacuation_site";
-        YEmergency.DataLoader.load(DBKey, YEmergency.DataLoader.createMarkersAjaxResponse(DBKey, map, markerDB));
-        var aed = "aed";
-        YEmergency.DataLoader.load(aed, YEmergency.DataLoader.createMarkersAjaxResponse(aed, map, markerDB));
     };
 
     showPosition({ coords: { latitude: 35.4739812, longitude: 139.5897151 } });
@@ -144,15 +145,23 @@ $(function () {
     //    document.getElementById("map_canvas").textContent = "Geolocation is not supported by this browser.";
     //}
     // Generate menu.
+    var changeMarkers = function (key, IsChecked) {
+        if (IsChecked) {
+            YEmergency.DataLoader.load(key, YEmergency.DataLoader.createMarkersAjaxResponse(key, map, markerDB));
+        } else {
+            markerDB.deleteMarkers(key);
+        }
+    };
+
     var Layers = [
-        new MenuItem("避難場所", true, function (IsChecked) {
-            console.log("避難場所" + " is clicked");
+        new MenuItem("震災時の避難場所", true, function (IsChecked) {
+            changeMarkers("evacuation_site", IsChecked);
         }),
         new MenuItem("AED設置場所", false, function (IsChecked) {
-            console.log("AED設置場所" + " is clicked");
+            changeMarkers("aed", IsChecked);
         }),
-        new MenuItem("ほげほげ", false, function (IsChecked) {
-            console.log("ほげほげ" + " is clicked");
+        new MenuItem("風水害時の避難場所", false, function (IsChecked) {
+            changeMarkers("flood", IsChecked);
         })
     ];
 

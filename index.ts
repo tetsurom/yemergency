@@ -100,6 +100,11 @@ class MenuItem {
             this.SetIsChecked(!this.Checked);
             OnClick(this.Checked);
         });
+
+        //For first time
+        if(this.Checked) {
+            OnClick(this.Checked);
+        }
     }
 
     private SetIsChecked(Flag: boolean){
@@ -143,10 +148,6 @@ $(() => {
         map = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);
 
         markerDB.insertMarker("MyPosition", YEmergency.createMarker(map, MyPosition, "You are here"));
-        var DBKey = "evacuation_site";
-        YEmergency.DataLoader.load(DBKey, YEmergency.DataLoader.createMarkersAjaxResponse(DBKey, map, markerDB));
-        var aed = "aed";
-        YEmergency.DataLoader.load(aed, YEmergency.DataLoader.createMarkersAjaxResponse(aed, map, markerDB));
     };
 
 
@@ -160,15 +161,23 @@ $(() => {
 
     // Generate menu.
 
+    var changeMarkers = (key: string, IsChecked: boolean) => {
+        if(IsChecked) {
+            YEmergency.DataLoader.load(key, YEmergency.DataLoader.createMarkersAjaxResponse(key, map, markerDB));
+        } else {
+            markerDB.deleteMarkers(key);
+        }
+    };
+
     var Layers = [
-        new MenuItem("避難場所", true, (IsChecked: boolean)=>{
-            console.log("避難場所" + " is clicked");
+        new MenuItem("震災時の避難場所", true, (IsChecked: boolean)=>{
+            changeMarkers("evacuation_site", IsChecked);
         }),
         new MenuItem("AED設置場所", false, (IsChecked: boolean)=>{
-            console.log("AED設置場所" + " is clicked");
+            changeMarkers("aed", IsChecked);
         }),
-        new MenuItem("ほげほげ", false, (IsChecked: boolean)=>{
-            console.log("ほげほげ" + " is clicked");
+        new MenuItem("風水害時の避難場所", false, (IsChecked: boolean)=>{
+            changeMarkers("flood", IsChecked);
         })
     ];
 
