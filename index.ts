@@ -8,7 +8,7 @@ interface Geometry {
 
 interface GeoJSON {
     type: string;
-    property: any/*FIXME*/;
+    properties: any/*FIXME*/;
     geometry: Geometry;
 }
 
@@ -49,6 +49,40 @@ module YEmergency {
             map: map,
             title: text
         });
+    }
+
+    export class DataLoader {
+        constructor() {
+        }
+
+        static load(key: string, callback: (result: any) => void): void {
+            $.ajax({
+                type: "GET",
+                url: "data/" + key +".geojson",
+                dataType: "json",
+                success: (response: any) => {
+                callback(response);
+            },
+            error: (req: XMLHttpRequest, status: string, errorThrown: any) => {
+                       console.log("========== Ajax Error ==========");
+                       console.log(status);
+                       console.log(req);
+                       console.log(errorThrown);
+                       console.log("================================");
+                   }
+            });
+        }
+
+        static createMarkersAjaxResponse(key: string, map: google.maps.Map, markerDB: YEmergency.MarkerDB): (res: any) => void {
+            return (res: any) => {
+                var geojsons: GeoJSON[] = res.features;
+                for(var i = 0; i < geojsons.length; i++) {
+                    var lat = new google.maps.LatLng(geojsons[i].geometry.coordinates[1], geojsons[i].geometry.coordinates[0]);
+                    var marker = YEmergency.createMarker(map, lat, geojsons[i].properties.NAME/*FIXME*/);
+                    markerDB.insertMarker(key, marker);
+                }
+            };
+        }
     }
 }
 
@@ -100,8 +134,6 @@ $(() => {
     var map: google.maps.Map;
 
     var showPosition = (position) => {
-        console.log(position.coords.latitude);
-        console.log(position.coords.longitude);
         var MyPosition = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
         var mapOptions = {
             center: MyPosition,
@@ -111,6 +143,10 @@ $(() => {
         map = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);
 
         markerDB.insertMarker("MyPosition", YEmergency.createMarker(map, MyPosition, "You are here"));
+        var DBKey = "evacuation_site";
+        YEmergency.DataLoader.load(DBKey, YEmergency.DataLoader.createMarkersAjaxResponse(DBKey, map, markerDB));
+        var aed = "aed";
+        YEmergency.DataLoader.load(aed, YEmergency.DataLoader.createMarkersAjaxResponse(aed, map, markerDB));
     };
 
 
