@@ -31,11 +31,12 @@ var YEmergency;
     })();
     YEmergency.MarkerDB = MarkerDB;
 
-    function createMarker(map, latLang, text) {
+    function createMarker(map, latLang, text, color, type) {
         return new google.maps.Marker({
             position: latLang,
             map: map,
-            title: text
+            title: text,
+            icon: 'http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=' + type + '|' + color + '|000000'
         });
     }
     YEmergency.createMarker = createMarker;
@@ -61,12 +62,12 @@ var YEmergency;
             });
         };
 
-        DataLoader.createMarkersAjaxResponse = function (key, map, markerDB) {
+        DataLoader.createMarkersAjaxResponse = function (key, map, markerDB, color, type) {
             return function (res) {
                 var geojsons = res.features;
                 for (var i = 0; i < geojsons.length; i++) {
                     var lat = new google.maps.LatLng(geojsons[i].geometry.coordinates[1], geojsons[i].geometry.coordinates[0]);
-                    var marker = YEmergency.createMarker(map, lat, geojsons[i].properties.NAME);
+                    var marker = YEmergency.createMarker(map, lat, geojsons[i].properties.NAME, color, type);
                     markerDB.insertMarker(key, marker);
                 }
             };
@@ -133,7 +134,7 @@ $(function () {
         };
         map = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);
 
-        markerDB.insertMarker("MyPosition", YEmergency.createMarker(map, MyPosition, "You are here"));
+        markerDB.insertMarker("MyPosition", YEmergency.createMarker(map, MyPosition, "You are here", "FF99FF", "現"));
     };
 
     showPosition({ coords: { latitude: 35.4739812, longitude: 139.5897151 } });
@@ -145,9 +146,9 @@ $(function () {
     //    document.getElementById("map_canvas").textContent = "Geolocation is not supported by this browser.";
     //}
     // Generate menu.
-    var changeMarkers = function (key, IsChecked) {
+    var changeMarkers = function (key, color, type, IsChecked) {
         if (IsChecked) {
-            YEmergency.DataLoader.load(key, YEmergency.DataLoader.createMarkersAjaxResponse(key, map, markerDB));
+            YEmergency.DataLoader.load(key, YEmergency.DataLoader.createMarkersAjaxResponse(key, map, markerDB, color, type));
         } else {
             markerDB.deleteMarkers(key);
         }
@@ -155,13 +156,13 @@ $(function () {
 
     var Layers = [
         new MenuItem("震災時の避難場所", true, function (IsChecked) {
-            changeMarkers("evacuation_site", IsChecked);
+            changeMarkers("evacuation_site", "00ff00", "震", IsChecked);
         }),
         new MenuItem("AED設置場所", false, function (IsChecked) {
-            changeMarkers("aed", IsChecked);
+            changeMarkers("aed", "FFCCAA", "A", IsChecked);
         }),
         new MenuItem("風水害時の避難場所", false, function (IsChecked) {
-            changeMarkers("flood", IsChecked);
+            changeMarkers("flood", "99FFFF", "水", IsChecked);
         })
     ];
 
