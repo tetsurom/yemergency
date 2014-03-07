@@ -89,7 +89,20 @@ var YEmergency;
 
         google.maps.event.addListener(marker, 'click', function () {
             var infowindow = new google.maps.InfoWindow();
-            infowindow.setContent(type + "\n" + text);
+            if (text != "") {
+                var div = document.createElement('div');
+                var span1 = document.createElement('span');
+                span1.textContent = type;
+                var span2 = document.createElement('span');
+                span2.textContent = text;
+                var br = document.createElement('br');
+                div.appendChild(span1);
+                div.appendChild(br);
+                div.appendChild(span2);
+                infowindow.setContent(div);
+            } else {
+                infowindow.setContent(type);
+            }
             infowindow.open(map, marker);
         });
         return marker;
@@ -198,18 +211,13 @@ $(function () {
         var MyPosition = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
         var mapOptions = {
             center: MyPosition,
-            zoom: 13,
+            zoom: 14,
             mapTypeId: google.maps.MapTypeId.ROADMAP
         };
         map = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);
 
         var url = YEmergency.createIconURLFromChartAPI("FF99FF", "現");
-        markerDB.insertMarker("MyPosition", YEmergency.createMarker(map, MyPosition, "You are here", url, "あなたの現在地"));
-
-        var tsunami = ["a1r3", "a2r2", "a3r2"];
-        for (var i = 0; i < tsunami.length; i++) {
-            YEmergency.DataLoader.load(tsunami[i], YEmergency.DataLoader.createPolygonsAjaxResponse(tsunami[i], map, polygonDB));
-        }
+        markerDB.insertMarker("MyPosition", YEmergency.createMarker(map, MyPosition, "", url, "あなたの現在地"));
     };
 
     showPosition({ coords: { latitude: 35.4739812, longitude: 139.5897151 } });
@@ -234,13 +242,25 @@ $(function () {
             var url = YEmergency.createIconURLFromChartAPI("00ff00", "避");
             changeMarkers("evacuation_site", url, "震災時の避難場所", IsChecked);
         }),
-        new MenuItem("AED設置場所", false, function (IsChecked) {
-            var url = "image/AED.png";
-            changeMarkers("aed", url, "AED設置場所", IsChecked);
-        }),
         new MenuItem("風水害時の避難場所", false, function (IsChecked) {
             var url = YEmergency.createIconURLFromChartAPI("99FFFF", "避");
             changeMarkers("flood", url, "風水害時の避難場所", IsChecked);
+        }),
+        new MenuItem("津波ハザードマップ", false, function (IsChecked) {
+            var tsunami = ["a1r3", "a2r2", "a3r2"];
+            if (IsChecked) {
+                for (var i = 0; i < tsunami.length; i++) {
+                    YEmergency.DataLoader.load(tsunami[i], YEmergency.DataLoader.createPolygonsAjaxResponse(tsunami[i], map, polygonDB));
+                }
+            } else {
+                for (var i = 0; i < tsunami.length; i++) {
+                    polygonDB.deletePolygons(tsunami[i]);
+                }
+            }
+        }),
+        new MenuItem("AED設置場所", false, function (IsChecked) {
+            var url = "image/AED.png";
+            changeMarkers("aed", url, "AED設置場所", IsChecked);
         })
     ];
 
