@@ -33,7 +33,13 @@ module YEmergency {
         }
 
         deleteMarkers(key: string): void {
-            //TODO
+            var markers = this.db[key];
+            if(markers) {
+                for(var i = 0; i < markers.length; i++) {
+                    markers[i].setMap(null);
+                }
+            }
+            this.db[key] = [];
         }
     }
 
@@ -47,7 +53,7 @@ module YEmergency {
 }
 
 var Debug: any = {};
-$(()=>{
+$(() => {
     var markerDB = new YEmergency.MarkerDB();
     Debug.markerDB = markerDB;
     var map: google.maps.Map;

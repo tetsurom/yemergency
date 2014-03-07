@@ -19,7 +19,13 @@ var YEmergency;
         };
 
         MarkerDB.prototype.deleteMarkers = function (key) {
-            //TODO
+            var markers = this.db[key];
+            if (markers) {
+                for (var i = 0; i < markers.length; i++) {
+                    markers[i].setMap(null);
+                }
+            }
+            this.db[key] = [];
         };
         return MarkerDB;
     })();
